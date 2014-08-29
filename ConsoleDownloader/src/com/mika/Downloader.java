@@ -1,27 +1,30 @@
 package com.mika;
 
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+
 
 public class Downloader implements Runnable{
     private ReadableByteChannel rbc;
     private FileChannel outChannel;
     private long position;
     private int bufferSize;
+    private long totalBytesRead;
 
-    // не должен ничего знать о менеджере закачек
-    private DownloadManager downloadManager;
+    ActionCallback actionCallback;
 
 
-    public Downloader( ReadableByteChannel readChannel, FileChannel writeChannel, long offset, DownloadManager dm, int bufSize ){
+    public Downloader(ReadableByteChannel readChannel, FileChannel writeChannel, long offset, DownloadManager dm, int bufSize, ActionCallback actCallback){
         rbc = readChannel;
         outChannel = writeChannel;
         position = offset;
-        downloadManager = dm;
         bufferSize = bufSize;
+        totalBytesRead = 0;
+
+        actionCallback = actCallback;
     }
 
     @Override
@@ -38,9 +41,8 @@ public class Downloader implements Runnable{
             long curPos = position;
             while (bytesRead != -1)
             {
-                // здесь не должно этого быть , по идее Downloader просто должен пытаться скачать байты через какой-то
-                // канал, а вот канал уже должен отдавать ему байты с задержкой (в зависимости от ограничений по скорости)
-                downloadManager.increaseBytesDownloaded( bytesRead );
+                totalBytesRead += bytesRead;
+
                 buf.flip();  //make buffer ready for read
 
                 while(buf.hasRemaining()){
@@ -60,8 +62,6 @@ public class Downloader implements Runnable{
             e.printStackTrace();
         }
 
-        // это через callback Делается, объявляешь интервейс
-        // interface ActionCallback { void perform() }
-        downloadManager.downloadComplete( outChannel );
+        actionCallback.perform( outChannel, totalBytesRead );
     }
 }
