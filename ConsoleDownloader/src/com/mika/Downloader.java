@@ -11,6 +11,8 @@ public class Downloader implements Runnable{
     private FileChannel outChannel;
     private long position;
     private int bufferSize;
+
+    // не должен ничего знать о менеджере закачек
     private DownloadManager downloadManager;
 
 
@@ -36,6 +38,8 @@ public class Downloader implements Runnable{
             long curPos = position;
             while (bytesRead != -1)
             {
+                // здесь не должно этого быть , по идее Downloader просто должен пытаться скачать байты через какой-то
+                // канал, а вот канал уже должен отдавать ему байты с задержкой (в зависимости от ограничений по скорости)
                 downloadManager.increaseBytesDownloaded( bytesRead );
                 buf.flip();  //make buffer ready for read
 
@@ -56,6 +60,8 @@ public class Downloader implements Runnable{
             e.printStackTrace();
         }
 
+        // это через callback Делается, объявляешь интервейс
+        // interface ActionCallback { void perform() }
         downloadManager.downloadComplete( outChannel );
     }
 }

@@ -19,9 +19,14 @@ import java.util.concurrent.*;
 import java.net.*;
 
 
+// разнеси по разным файлам интерфейс и реализацию
+// часто реализацию ложат в пакет impl
+// избавься от строковых http значений типа HEAD, Range (используй httpcomponents-core, у них все константы есть https://hc.apache.org/httpcomponents-core-4.3.x/httpcore/apidocs/constant-values.html)
+
 // Implementation of DownloadManager handles all downloads and delegates download tasks to Downloader threads
 public interface DownloadManager {
 
+    // у интерфейсных методов плохая практика писать модификатор доступа, потому как они по умолчанию public
     public void startDownload();    // start download process;
     public void increaseBytesDownloaded( long val );
 
@@ -43,16 +48,22 @@ class DownloadManagerImpl implements DownloadManager {
     private long totalContentLength;
 
     private ExecutorService executorService;    // thread pool to handle download tasks
+    // используй интерфейсы, здесь Map
     private HashMap<SeekableByteChannel,Integer> outputFilesMap;
     private HashMap<String,String> resourcesMap;    // stores already downloaded resources and names
     private HashMap<String, ArrayList<String> > copyResourcesMap;  // stores <URL, <List of destination files>>
 
     private TokenBucket tokenBucket;
 
+    // должна быть статическая
     private final int DOWNLOAD_BUFFER_SIZE = 4096;  // buffer size in bytes
 
+    // конструктор должен иметь публичный доступ, а не пакетный
     DownloadManagerImpl( int nThreads, long speedLimit, String outFolder, String links )
     {
+        // нужно проверять на ошибки, можешь http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/util/Assert.html
+        // Assert.isTrue(nThreads > 0, "Thread number must be positive");
+
         threadsCount = nThreads;
         downloadSpeed = speedLimit;
         outputFolder = outFolder;
@@ -68,6 +79,8 @@ class DownloadManagerImpl implements DownloadManager {
         tokenBucket = new TokenBucketImpl( downloadSpeed );
     }
 
+    // тяжеловато читать основной метод
+    // Можно разнести функциональность по логике
     public void startDownload()
     {
         long startTime = System.currentTimeMillis();
@@ -97,10 +110,12 @@ class DownloadManagerImpl implements DownloadManager {
                     resourcesMap.put(address, fileToSave);
                 }
                 else {
+                    // используй константу File.separator
                     String src = outputFolder + "\\" + resourcesMap.get(address);
                     String dest = outputFolder + "\\" + fileToSave;
 
                     if( !copyResourcesMap.containsKey( src ) ) {
+                        // Set правильнее, чтобы один и тот же файл несолько раз не копировать
                         ArrayList<String> destsList = new ArrayList<String>();
                         destsList.add( dest );
                         copyResourcesMap.put( src, destsList );
@@ -120,6 +135,7 @@ class DownloadManagerImpl implements DownloadManager {
 
                 boolean supportPartialContent = checkConnection.getResponseCode() == HttpURLConnection.HTTP_PARTIAL;
                 long contentSize = checkConnection.getContentLengthLong();
+                // дебаг информация , как подключишь loging фреймворк сделай у него северити DEBUG
                 System.out.println("Website: " + address);
                 System.out.println("Response Code: " + checkConnection.getResponseCode());
                 System.out.println("Partial content retrieval support = " + (supportPartialContent ? "Yes" : "No"));
@@ -128,6 +144,7 @@ class DownloadManagerImpl implements DownloadManager {
 
                 totalContentLength += contentSize;
 
+                // используй константу File.separator
                 RandomAccessFile aFile = new RandomAccessFile(outputFolder + "\\" + fileToSave, "rw");
                 FileChannel outChannel = aFile.getChannel();
 
@@ -161,6 +178,8 @@ class DownloadManagerImpl implements DownloadManager {
                         else
                             downloadConnection.setRequestProperty("Range", "bytes=" + currentBlockStart + "-" + blockEnd);
                         downloadConnection.connect();
+                        // это че за дикая проверка ? Статус 200 - это известный HTTP респонс код
+                        // https://hc.apache.org/httpcomponents-core-4.3.x/httpcore/apidocs/org/apache/http/HttpStatus.html#SC_OK
                         if (downloadConnection.getResponseCode() / 100 != 2) {
                             System.err.println("Unsuccessful response code:" + downloadConnection.getResponseCode());
                             break;
@@ -183,6 +202,7 @@ class DownloadManagerImpl implements DownloadManager {
                 }
                 else    // partial content is not supported
                 {
+                    // дубирование кода, подумай как вынести в отдельный метод и заиспользовать в обоих случаях
                     outputFilesMap.put( outChannel, 1 );
 
                     HttpURLConnection downloadConnection = (HttpURLConnection) website.openConnection();
@@ -228,6 +248,7 @@ class DownloadManagerImpl implements DownloadManager {
         try {
             boolean terminated = false;
             do{
+                // 10 в отдельную константу
                 terminated = executorService.awaitTermination(10, TimeUnit.MINUTES);
             } while( !terminated );
         }catch ( InterruptedException e ) {
@@ -272,6 +293,7 @@ class DownloadManagerImpl implements DownloadManager {
         int minutes = (int)(totalTime/60000);
         int seconds = (int)(totalTime/1000) - 60*minutes;
 
+        // посмотри на http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/util/StopWatch.html
         System.out.println("==================");
         System.out.println("Download complete");
         System.out.println("Work time: " + minutes + ":" + seconds + " (min:sec)");
@@ -295,6 +317,7 @@ class DownloadManagerImpl implements DownloadManager {
                     e.printStackTrace();
                 }
             } else {
+                // избавься от replace метода, он с JDK 8 только появился
                 outputFilesMap.replace(channel, new Integer(curVal));
             }
         }

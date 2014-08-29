@@ -8,11 +8,14 @@ public class Main
     private static final long DEFAULT_SPEED_LIMIT = 0; // limitless
     private static final String DEFAULT_LINKS_FILE = "links.txt";
 
+    // static и public местами перепутаны
     static public void main( String args[] ) throws Exception
     {
         // TODO: try using commons CLI parser here
         if( args.length != 8 )
         {
+            // хороший стиль использовать имплементацию slf4j такую как (logback или log4j) для вывода сообщений куда бы то ни было
+            // logback - http://logback.qos.ch/, в градл добавляешь зависимость и вперед
             System.err.println( "Too few arguments");
             System.err.println( "Usage: java -jar utility.jar -n 5 -l 2000k -o output_folder -f links.txt" );
             System.exit( 1 );
@@ -24,6 +27,7 @@ public class Main
         String downloadList = DEFAULT_LINKS_FILE;
 
         // parse args list
+        // если воспользуешься apache commons CLI - избавишься от этого кода :)
         for( int i = 0; i < args.length; i+=2 )
         {
             String arg = args[i];
@@ -41,6 +45,7 @@ public class Main
                 int multiplier = 1;
                 boolean stopFlag = false;
                 int k = val.length()-1;
+                // не понял почему не просто брать последний символ ? mm или mk и т.д.  - это должно быть опечаткой, т.е. ошибкой
                 for(; k >= 0; k--)
                 {
                     char suffix = val.charAt( k );
@@ -55,6 +60,7 @@ public class Main
                 }
 
                 String speedVal = val.substring(0,k+1);
+                // можно обработать и показывать как ошибка, как ты это делаешь выше
                 downloadSpeed = Long.valueOf( speedVal )*multiplier;
 
                 if( downloadSpeed < 0 )

@@ -1,6 +1,9 @@
 package com.mika;
 
 
+// разнеси по разным файлам интерфейс и реализацию
+// убери public из определения методов в интерфейсе
+
 // Simple implementation of TokenBucket algorithm for traffic shaping
 // Refer to http://en.wikipedia.org/wiki/Token_bucket
 
@@ -28,6 +31,9 @@ class TokenBucketImpl implements TokenBucket {
 
     @Override
     public void run() {
+
+        // Это че за прикол ? :)
+        // Сам выбросил исключение, сам его обработал и пошел дальше
         if( speedLimit <= 0 )
             try {
                 throw new Exception("Speed Limit must be positive value");
