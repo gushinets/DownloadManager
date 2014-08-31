@@ -1,18 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="b96a3ab7-cc2f-4565-9c9e-2c36ffb87c7d" name="Default" comment="Minor design changes">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/build.gradle" />
-      <change type="DELETED" beforePath="C:\Work\Java\DownloadManager\ConsoleDownloader\src\com\mika\ActionCallback.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\Work\Java\DownloadManager\ConsoleDownloader\src\com\mika\DownloadManager.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\Work\Java\DownloadManager\ConsoleDownloader\src\com\mika\Downloader.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\Work\Java\DownloadManager\ConsoleDownloader\src\com\mika\LimitedByteChannel.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\Work\Java\DownloadManager\ConsoleDownloader\src\com\mika\Main.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\Work\Java\DownloadManager\ConsoleDownloader\src\com\mika\TokenBucket.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\Work\Java\DownloadManager\ConsoleDownloader\src\com\mika\impl\DownloadManagerImpl.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\Work\Java\DownloadManager\ConsoleDownloader\src\com\mika\impl\TokenBucketImpl.java" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/vcs.xml" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
+    <list default="true" id="b96a3ab7-cc2f-4565-9c9e-2c36ffb87c7d" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="ConsoleDownloader.iws" />
@@ -49,7 +38,7 @@
       <file leaf-file-name="DownloadManagerImpl.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/com/mika/impl/DownloadManagerImpl.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.3853211" vertical-offset="2775" max-vertical-offset="5321">
+            <state vertical-scroll-proportion="0.5884413" vertical-offset="2775" max-vertical-offset="5321">
               <caret line="209" column="52" selection-start-line="209" selection-start-column="52" selection-end-line="209" selection-end-column="52" />
               <folding>
                 <element signature="e#4426#4434#0" expanded="true" />
@@ -1122,12 +1111,17 @@
       <workItem from="1409478042529" duration="3070000" />
       <workItem from="1409490655512" duration="7758000" />
       <workItem from="1409502640634" duration="2089000" />
-      <workItem from="1409505877426" duration="569000" />
+      <workItem from="1409505877426" duration="677000" />
     </task>
+    <task id="LOCAL-00001" summary="Added gradle build script">
+      <created>1409506880254</created>
+      <updated>1409506880254</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="114944000" />
+    <option name="totallyTimeSpent" value="115052000" />
   </component>
   <component name="TodoView" selected-index="0">
     <todo-panel id="selected-file">
@@ -1154,7 +1148,7 @@
     <editor active="false" />
     <layout>
       <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Changes" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32893288" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Changes" active="true" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32893288" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32893288" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -1167,6 +1161,7 @@
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2326284" sideWeight="0.5007657" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32893288" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32711306" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle" active="false" anchor="right" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2031722" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32673267" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24924472" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -1179,7 +1174,6 @@
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32924962" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32711306" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
@@ -1199,7 +1193,8 @@
       <TodoPanelSettings />
     </option>
     <MESSAGE value="Minor design changes" />
-    <option name="LAST_COMMIT_MESSAGE" value="Minor design changes" />
+    <MESSAGE value="Added gradle build script" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added gradle build script" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1479,7 +1474,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/mika/impl/DownloadManagerImpl.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.3853211" vertical-offset="2775" max-vertical-offset="5321">
+        <state vertical-scroll-proportion="0.5884413" vertical-offset="2775" max-vertical-offset="5321">
           <caret line="209" column="52" selection-start-line="209" selection-start-column="52" selection-end-line="209" selection-end-column="52" />
           <folding>
             <element signature="e#4426#4434#0" expanded="true" />
