@@ -1,0 +1,28 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'application'
+
+mainClassName = 'com.mika.Main'
+
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+
+jar {
+    baseName = 'ConsoleDownloader'
+    version =  '1.0'
+}
+
+
+dependencies {
+    compile 'org.springframework:spring-core:4.0.6.RELEASE'
+    compile 'org.apache.httpcomponents:httpclient:4.3.1'
+}
+
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.0'
+}
