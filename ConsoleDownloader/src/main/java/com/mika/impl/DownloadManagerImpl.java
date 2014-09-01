@@ -2,10 +2,15 @@ package com.mika.impl;
 
 
 import com.mika.*;
+
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
+
 import org.springframework.util.Assert;
-import org.apache.http.*;
+import org.springframework.util.StopWatch;
+
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -18,16 +23,11 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-
-// избавься от строковых http значений типа HEAD, Range (используй httpcomponents-core, у них все константы есть https://hc.apache.org/httpcomponents-core-4.3.x/httpcore/apidocs/constant-values.html)
 
 // Implementation of DownloadManager handles all  downloads and delegates download tasks to Downloader threads
 public class DownloadManagerImpl implements DownloadManager {
@@ -42,13 +42,14 @@ public class DownloadManagerImpl implements DownloadManager {
     private ExecutorService executorService;                    // thread pool to handle download tasks
 
     private Map<SeekableByteChannel,Integer> outputFilesMap;
-    private Map<String,String> resourcesMap;                    // stores already downloaded resources and names
-    private Map<String, ArrayList<String>> copyResourcesMap;    // stores <URL, <List of destination files>>
+    private Map<String, String> resourcesMap;                   // stores already downloaded resources and names
+    private Map<String, Set<String>> copyResourcesMap;          // stores <URL, <List of destination files>>
 
     private TokenBucket tokenBucket;
 
     private static final int DOWNLOAD_BUFFER_SIZE = 4096;       // buffer size in bytes
     private static final int TIME_TO_WAIT_TERMINATION = 10;     // time to wait for termination of executorService
+    private static final String RANGE_BYTES_STRING = "bytes=";
 
 
     public DownloadManagerImpl(int nThreads, long speedLimit, String outFolder, String links)
@@ -68,18 +69,17 @@ public class DownloadManagerImpl implements DownloadManager {
         executorService = Executors.newFixedThreadPool(threadsCount);
         outputFilesMap = new HashMap<SeekableByteChannel, Integer>( 1 );
         resourcesMap = new HashMap<String, String>( 1 );
-        copyResourcesMap = new HashMap<String, ArrayList<String> >();
+        copyResourcesMap = new HashMap<String, Set<String> >();
 
         if( downloadSpeed > 0 ) {
             tokenBucket = new TokenBucketImpl(downloadSpeed);
         }
     }
 
-    // тяжеловато читать основной метод
-    // Можно разнести функциональность по логике
     public void startDownload()
     {
-        long startTime = System.currentTimeMillis();
+        StopWatch watcher = new StopWatch();
+        watcher.start();
 
         Thread t = null;
         if( downloadSpeed > 0 ) {
@@ -106,12 +106,11 @@ public class DownloadManagerImpl implements DownloadManager {
                     resourcesMap.put(address, fileToSave);
                 }
                 else {
-                    String src = outputFolder + File.pathSeparator + resourcesMap.get(address);
-                    String dest = outputFolder + File.pathSeparator + fileToSave;
+                    String src = outputFolder + File.separator + resourcesMap.get(address);
+                    String dest = outputFolder + File.separator + fileToSave;
 
                     if( !copyResourcesMap.containsKey( src ) ) {
-                        // Set правильнее, чтобы один и тот же файл несолько раз не копировать
-                        ArrayList<String> destsList = new ArrayList<String>();
+                        Set<String> destsList = new HashSet<String>();
                         destsList.add( dest );
                         copyResourcesMap.put( src, destsList );
                     }
@@ -126,11 +125,11 @@ public class DownloadManagerImpl implements DownloadManager {
                 URL website = new URL( address );
                 HttpURLConnection checkConnection = (HttpURLConnection)website.openConnection();
                 checkConnection.setRequestMethod( HttpHead.METHOD_NAME );
-                checkConnection.setRequestProperty( HttpHeaders.RANGE, "bytes=0-" );
+                checkConnection.setRequestProperty( HttpHeaders.RANGE, RANGE_BYTES_STRING + "0-" );
 
                 boolean supportPartialContent = (checkConnection.getResponseCode() == HttpStatus.SC_PARTIAL_CONTENT );
                 long contentSize = checkConnection.getContentLengthLong();
-                // дебаг информация , как подключишь loging фреймворк сделай у него северити DEBUG
+
                 System.out.println("Website: " + address);
                 System.out.println("Response Code: " + checkConnection.getResponseCode());
                 System.out.println("Partial content retrieval support = " + (supportPartialContent ? "Yes" : "No"));
@@ -139,74 +138,49 @@ public class DownloadManagerImpl implements DownloadManager {
 
                 totalContentLength += contentSize;
 
-                RandomAccessFile aFile = new RandomAccessFile(outputFolder + File.pathSeparator + fileToSave, "rw");
+                RandomAccessFile aFile = new RandomAccessFile(outputFolder + File.separator + fileToSave, "rw");
                 FileChannel outChannel = aFile.getChannel();
 
                 // if entire file size is smaller than buffer_size, then download it in one thread
                 if( contentSize <= DOWNLOAD_BUFFER_SIZE )
                     supportPartialContent = false;
 
-                if( supportPartialContent ) {
-                    int blocksCount = threadsCount;
-                    long currentBlockStart = 0;
-                    long blockSize = (int) contentSize / blocksCount + 1;
+                int blocksCount = 1;    // if partial content is not supported
+                long blockSize = 0;
+                long currentBlockStart = 0;
+                long blockEnd = 0;
 
-                    if( blockSize < DOWNLOAD_BUFFER_SIZE ) {
+                if( supportPartialContent ) {
+                    blocksCount = threadsCount;
+                    blockSize = (int) contentSize / blocksCount + 1;
+
+                    if (blockSize < DOWNLOAD_BUFFER_SIZE) {
                         blockSize = DOWNLOAD_BUFFER_SIZE;
 
-                        if( contentSize%blockSize > 0 )
-                            blocksCount = (int)(contentSize/blockSize) + 1;
+                        if (contentSize % blockSize > 0)
+                            blocksCount = (int) (contentSize / blockSize) + 1;
                         else
-                            blocksCount = (int)(contentSize/blockSize);
-                    }
-
-                    // save FileChannel to close it after all downloads complete
-                    outputFilesMap.put( outChannel, blocksCount );
-
-                    for (int k = 0; k < blocksCount; k++) {
-                        long blockEnd = currentBlockStart + blockSize - 1;
-                        HttpURLConnection downloadConnection = (HttpURLConnection) website.openConnection();
-                        downloadConnection.setRequestMethod(HttpGet.METHOD_NAME);
-                        if (k == blocksCount - 1)
-                            downloadConnection.setRequestProperty(HttpHeaders.RANGE, "bytes=" + currentBlockStart + "-");
-                        else
-                            downloadConnection.setRequestProperty(HttpHeaders.RANGE, "bytes=" + currentBlockStart + "-" + blockEnd);
-                        downloadConnection.connect();
-
-                        if (downloadConnection.getResponseCode() / 100 != 2) {
-                            System.err.println("Unsuccessful response code:" + downloadConnection.getResponseCode());
-                            continue;
-                        }
-                        int contentLength = downloadConnection.getContentLength();
-                        if (contentLength < 1) {
-                            System.err.println("Can not get content");
-                            continue;
-                        }
-
-                        InputStream is = downloadConnection.getInputStream();
-                        ReadableByteChannel rbc = Channels.newChannel(is);
-                        ReadableByteChannel readChannel = ( downloadSpeed > 0 ) ? new LimitedByteChannel( rbc, tokenBucket ) : rbc;
-
-                        // create download task
-                        executorService.execute(new Downloader( readChannel, outChannel, currentBlockStart, DOWNLOAD_BUFFER_SIZE,
-                                new ActionCallback() {
-                                    public void perform( FileChannel out, long bytesDownloded ) {
-                                        downloadComplete( out, bytesDownloded );
-                                    }
-
-                                }));
-
-                        currentBlockStart = blockEnd + 1;
+                            blocksCount = (int) (contentSize / blockSize);
                     }
                 }
-                else    // partial content is not supported
-                {
-                    // дубирование кода, подумай как вынести в отдельный метод и заиспользовать в обоих случаях
-                    outputFilesMap.put( outChannel, 1 );
 
+                // save FileChannel to close it after all downloads complete
+                outputFilesMap.put( outChannel, blocksCount );
+
+                for (int k = 0; k < blocksCount; k++) {
                     HttpURLConnection downloadConnection = (HttpURLConnection) website.openConnection();
                     downloadConnection.setRequestMethod(HttpGet.METHOD_NAME);
+
+                    if( supportPartialContent ) {
+                        blockEnd = currentBlockStart + blockSize - 1;
+                        if (k == blocksCount - 1)
+                            downloadConnection.setRequestProperty(HttpHeaders.RANGE, RANGE_BYTES_STRING + currentBlockStart + "-");
+                        else
+                            downloadConnection.setRequestProperty(HttpHeaders.RANGE, RANGE_BYTES_STRING + currentBlockStart + "-" + blockEnd);
+                    }
+
                     downloadConnection.connect();
+
                     if (downloadConnection.getResponseCode() / 100 != 2) {
                         System.err.println("Unsuccessful response code:" + downloadConnection.getResponseCode());
                         continue;
@@ -219,17 +193,21 @@ public class DownloadManagerImpl implements DownloadManager {
 
                     InputStream is = downloadConnection.getInputStream();
                     ReadableByteChannel rbc = Channels.newChannel(is);
-                    ReadableByteChannel readChannel = ( downloadSpeed > 0 ) ? new LimitedByteChannel( rbc, tokenBucket ) : rbc;
+                    ReadableByteChannel readChannel = (downloadSpeed > 0) ? new LimitedByteChannel(rbc, tokenBucket) : rbc;
 
                     // create download task
-                    executorService.execute(new Downloader( readChannel, outChannel, 0, DOWNLOAD_BUFFER_SIZE,
+                    executorService.execute(new Downloader(readChannel, outChannel, currentBlockStart, DOWNLOAD_BUFFER_SIZE,
                             new ActionCallback() {
-                                public void perform( FileChannel out, long bytesDownloded ) {
-                                    downloadComplete( out, bytesDownloded );
+                                public void perform(FileChannel out, long bytesDownloded) {
+                                    downloadComplete(out, bytesDownloded);
                                 }
 
-                            }));
+                            }
+                    ));
 
+                    if( supportPartialContent ) {
+                        currentBlockStart = blockEnd + 1;
+                    }
                 }
             }
         }
@@ -271,11 +249,11 @@ public class DownloadManagerImpl implements DownloadManager {
 
         Iterator it = copyResourcesMap.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry pairs = (Map.Entry)it.next();
-            System.out.println(pairs.getKey() + " = " + pairs.getKey());
-
+            Map.Entry<String, Set<String>> pairs = (Map.Entry<String, Set<String>>)it.next();
+            //System.out.println(pairs.getKey() + " = " + pairs.getValue());
             String src = (String)pairs.getKey();
-            ArrayList<String> destsList = (ArrayList<String>)pairs.getValue();
+            Set<String> destsList = pairs.getValue();
+
             for (String aDestsList : destsList) {
                 Path srcPath = FileSystems.getDefault().getPath(src);
                 Path dstPath = FileSystems.getDefault().getPath(aDestsList);
@@ -285,25 +263,20 @@ public class DownloadManagerImpl implements DownloadManager {
                     e.printStackTrace();
                 }
             }
-
             it.remove();
         }
 
 
 
-
-        long endTime   = System.currentTimeMillis();
-        long totalTime = endTime - startTime;
-
+        watcher.stop();
+        long totalTime = watcher.getTotalTimeMillis();
         int minutes = (int)(totalTime/60000);
         int seconds = (int)(totalTime/1000) - 60*minutes;
 
-        // посмотри на http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/util/StopWatch.html
         System.out.println("==================");
         System.out.println("Download complete");
         System.out.println("Work time: " + minutes + ":" + seconds + " (min:sec)");
         System.out.println("Totally downloaded: " + totalBytesDownloaded + " bytes");
-        //System.out.println("Total content length: " + totalContentLength + " bytes");
         System.out.println("Average download speed: " + totalBytesDownloaded/(totalTime/1000) + " bytes/sec");
     }
 
@@ -325,8 +298,7 @@ public class DownloadManagerImpl implements DownloadManager {
                     e.printStackTrace();
                 }
             } else {
-                // избавься от replace метода, он с JDK 8 только появился
-                outputFilesMap.replace(channel, curVal);
+                outputFilesMap.put( channel, curVal);
             }
         }
 

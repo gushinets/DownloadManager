@@ -41,7 +41,9 @@ public class LimitedByteChannel implements ReadableByteChannel {
         }
 
         // remove "read" tokens from bucket
-        tokenBucket.getTokens( read );
+        if( read > 0 ) {
+            tokenBucket.getTokens(read);
+        }
 
         return read;
     }
