@@ -285,7 +285,7 @@ public class DownloadManagerImpl implements DownloadManager {
     }
 
     private void copyDuplicateLinks() {
-        Iterator it = copyResourcesMap.entrySet().iterator();
+        Iterator<Map.Entry<String, Set<String>>> it = copyResourcesMap.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, Set<String>> pairs = (Map.Entry<String, Set<String>>)it.next();
             //System.out.println(pairs.getKey() + " = " + pairs.getValue());
