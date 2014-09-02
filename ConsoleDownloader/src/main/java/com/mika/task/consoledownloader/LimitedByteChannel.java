@@ -1,4 +1,4 @@
-package com.mika;
+package com.mika.task.consoledownloader;
 
 
 import org.springframework.util.Assert;
@@ -8,13 +8,13 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 
 public class LimitedByteChannel implements ReadableByteChannel {
-    private TokenBucket tokenBucket;
-    private ReadableByteChannel rbc;
+    private final TokenBucket tokenBucket;
+    private final ReadableByteChannel rbc;
 
-    public LimitedByteChannel( ReadableByteChannel original, TokenBucket bucket )
+    public LimitedByteChannel(ReadableByteChannel original, TokenBucket bucket)
     {
-        Assert.notNull( original, "Channel to read from must be not null" );
-        Assert.notNull( bucket, "Bucket object must be not null" );
+        Assert.notNull(original, "Channel to read from must be not null");
+        Assert.notNull(bucket, "Bucket object must be not null");
 
         rbc = original;
         tokenBucket = bucket;
@@ -24,24 +24,23 @@ public class LimitedByteChannel implements ReadableByteChannel {
     // All Downloaders call this method
     // Channel decides how much data to read
     synchronized public int read(ByteBuffer dst) throws IOException {
-        Assert.notNull( dst, "Buffer to read into can not be null" );
+        Assert.notNull(dst, "Buffer to read into can not be null");
 
         long tokensLeft = tokenBucket.getTokensLeft();
         int bufferSize = dst.capacity();
         int read;
 
-        if( tokensLeft < bufferSize ) {
-            ByteBuffer newBuf = ByteBuffer.allocate( (int)tokensLeft ); // if tokensLeft < bufferSize we can truncate long to int
-            read = this.reallyRead( newBuf );
+        if (tokensLeft < bufferSize) {
+            ByteBuffer newBuf = ByteBuffer.allocate((int) tokensLeft); // if tokensLeft < bufferSize we can truncate long to int
+            read = this.reallyRead(newBuf);
             newBuf.flip();
-            dst.put( newBuf );
-        }
-        else {
-            read = this.reallyRead( dst );
+            dst.put(newBuf);
+        } else {
+            read = this.reallyRead(dst);
         }
 
         // remove "read" tokens from bucket
-        if( read > 0 ) {
+        if (read > 0) {
             tokenBucket.getTokens(read);
         }
 
@@ -49,7 +48,7 @@ public class LimitedByteChannel implements ReadableByteChannel {
     }
 
     private int reallyRead(ByteBuffer dst) throws IOException {
-        return rbc.read( dst );
+        return rbc.read(dst);
     }
 
 

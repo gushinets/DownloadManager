@@ -1,4 +1,4 @@
-package com.mika;
+package com.mika.task.consoledownloader;
 
 
 import org.springframework.util.Assert;
@@ -10,13 +10,13 @@ import java.nio.channels.ReadableByteChannel;
 
 
 public class Downloader implements Runnable{
-    private ReadableByteChannel rbc;
-    private FileChannel outChannel;
-    private long position;
-    private int bufferSize;
+    private final ReadableByteChannel rbc;
+    private final FileChannel outChannel;
+    private final long position;
+    private final int bufferSize;
     private long totalBytesRead;
 
-    ActionCallback actionCallback;
+    private final ActionCallback actionCallback;
 
 
     public Downloader(ReadableByteChannel readChannel, FileChannel writeChannel, long offset, int bufSize, ActionCallback actCallback){

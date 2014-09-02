@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'application'
 
-mainClassName = 'com.mika.Main'
+mainClassName = 'com.mika.task.consoledownloader.Main'
 
 
 repositories {
@@ -14,6 +14,10 @@ repositories {
 jar {
     baseName = 'ConsoleDownloader'
     version =  '1.0'
+    
+    manifest {
+        attributes 'Main-Class': 'com.mika.task.consoledownloader.Main'
+    }
 }
 
 
@@ -21,9 +25,20 @@ dependencies {
     compile 'org.springframework:spring-core:4.0.6.RELEASE'
     compile 'org.apache.httpcomponents:httpclient:4.3.1'
     compile 'ch.qos.logback:logback-classic:1.1.2'
+    compile 'commons-cli:commons-cli:1.2'
 }
 
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.0'
+}
+
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'com.mika.task.consoledownloader.Main'
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
 }

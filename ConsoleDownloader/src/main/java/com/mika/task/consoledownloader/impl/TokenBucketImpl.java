@@ -1,6 +1,6 @@
-package com.mika.impl;
+package com.mika.task.consoledownloader.impl;
 
-import com.mika.TokenBucket;
+import com.mika.task.consoledownloader.TokenBucket;
 import org.springframework.util.Assert;
 
 // Simple implementation of TokenBucket algorithm for traffic shaping
@@ -14,8 +14,8 @@ class TokenBucketImpl implements TokenBucket {
 
     private static final int TIME_TO_SLEEP = 1000;
 
-    TokenBucketImpl( long bytesPerSecond ) {
-        Assert.isTrue( bytesPerSecond > 0, "Speed Limit must be positive value" );
+    TokenBucketImpl(long bytesPerSecond) {
+        Assert.isTrue(bytesPerSecond > 0, "Speed Limit must be positive value");
 
         speedLimit = bytesPerSecond;
         keepAlive = true;
@@ -26,10 +26,9 @@ class TokenBucketImpl implements TokenBucket {
     }
 
     @Override
-    public void run()
-    {
+    public void run() {
         // every 1 second refresh bandwidth to desired value
-        while( keepAlive ) {
+        while (keepAlive) {
             currentTokensCount = speedLimit;
 
             try {
@@ -42,13 +41,12 @@ class TokenBucketImpl implements TokenBucket {
 
     @Override
     public boolean getTokens(long n) {
-        Assert.isTrue( n >= 0, "Tokens amount must be not negative");
+        Assert.isTrue(n >= 0, "Tokens amount must be not negative");
 
-        if( n <= currentTokensCount ) {
+        if (n <= currentTokensCount) {
             currentTokensCount -= n;
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
