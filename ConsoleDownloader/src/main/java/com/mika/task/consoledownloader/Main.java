@@ -125,7 +125,7 @@ public class Main {
                 }
             }
         } catch (ParseException exp) {
-            LOGGER.error("Parsing failed.  Reason: " + exp.getMessage());
+            LOGGER.error("Parsing failed.  Reason: {}", exp.getMessage());
             System.exit(1);
         }
 

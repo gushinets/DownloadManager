@@ -61,11 +61,6 @@ public class DownloadManagerImpl implements DownloadManager {
     private long totalBytesDownloaded;
 
     /**
-     * Thread pool to handle download tasks.
-     */
-    private final ExecutorService executorService;
-
-    /**
      * Map that stores output channel and number of threads currently
      * writing into this channel. Required to decide when to close channel.
      */
@@ -129,7 +124,6 @@ public class DownloadManagerImpl implements DownloadManager {
         downloadList = links;
         totalBytesDownloaded = 0;
 
-        executorService = Executors.newFixedThreadPool(threadsCount);
         outputFilesMap = new HashMap<SeekableByteChannel, Integer>(1);
         resourcesMap = new HashMap<String, String>(1);
         copyResourcesMap = new HashMap<String, Set<String>>();
@@ -159,7 +153,7 @@ public class DownloadManagerImpl implements DownloadManager {
             while ((sCurrentLine = br.readLine()) != null) {
                 String [] list = sCurrentLine.split(" ");
                 if (list.length < 2) {
-                    LOGGER.error("Too few tokens in line: " + sCurrentLine);
+                    LOGGER.error("Too few tokens in line: {}", sCurrentLine);
                     continue;
                 }
                 String address = list[0];
@@ -183,18 +177,6 @@ public class DownloadManagerImpl implements DownloadManager {
             }
         }
 
-        executorService.shutdown();
-
-        // wait for all downloads to complete
-        try {
-            boolean terminated;
-            do {
-                terminated = executorService.awaitTermination(TIME_TO_WAIT_TERMINATION, TimeUnit.MINUTES);
-            } while(!terminated);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         if (t != null) {
             tokenBucket.shutdown();
             try {
@@ -215,14 +197,28 @@ public class DownloadManagerImpl implements DownloadManager {
 
         LOGGER.info("==================");
         LOGGER.info("Download complete");
-        LOGGER.info("Work time: " + minutes + ":" + seconds + " (min:sec)");
-        LOGGER.info("Totally downloaded: " + totalBytesDownloaded + " bytes");
-        LOGGER.info("Average download speed: " + totalBytesDownloaded / (totalTime / millisecondsInSecond) + " bytes/sec");
+        LOGGER.info("Work time: {}:{} (min:sec)", minutes, seconds);
+        LOGGER.info("Totally downloaded: {}  bytes", totalBytesDownloaded);
+        LOGGER.info("Average download speed: {} bytes/sec", totalBytesDownloaded / (totalTime / millisecondsInSecond));
+    }
+
+    private void completeAllDownloads(ExecutorService executorService) {
+        executorService.shutdown();
+        try {
+            boolean terminated;
+            do {
+                terminated = executorService.awaitTermination(TIME_TO_WAIT_TERMINATION, TimeUnit.MINUTES);
+            } while(!terminated);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private void createDownloadTasks(String address, int blocksCount, long blockSize, boolean supportPartialContent, FileChannel outChannel) {
         long currentBlockStart = 0;
         long blockEnd = 0;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threadsCount);
 
         try {
             for (int k = 0; k < blocksCount; k++) {
@@ -243,7 +239,7 @@ public class DownloadManagerImpl implements DownloadManager {
 
                 // responses inside range 2XX (success) are ok for us
                 if (downloadConnection.getResponseCode() / 100 != 2) {
-                    LOGGER.error("Unsuccessful response code:" + downloadConnection.getResponseCode());
+                    LOGGER.error("Unsuccessful response code: {}", downloadConnection.getResponseCode());
                     continue;
                 }
                 int contentLength = downloadConnection.getContentLength();
@@ -273,6 +269,8 @@ public class DownloadManagerImpl implements DownloadManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        completeAllDownloads(executorService);
     }
 
 
@@ -287,10 +285,10 @@ public class DownloadManagerImpl implements DownloadManager {
             boolean supportPartialContent = (checkConnection.getResponseCode() == HttpStatus.SC_PARTIAL_CONTENT);
             long contentSize = checkConnection.getContentLengthLong();
 
-            LOGGER.info(address + " -> " + fileToSave);
-            LOGGER.debug("Response Code: " + checkConnection.getResponseCode());
-            LOGGER.debug("Partial content retrieval support: " + supportPartialContent);
-            LOGGER.debug("Content-Length: " + contentSize);
+            LOGGER.info("{} -> {}", address, fileToSave);
+            LOGGER.debug("Response Code: {}", checkConnection.getResponseCode());
+            LOGGER.debug("Partial content retrieval support: {}", supportPartialContent);
+            LOGGER.debug("Content-Length: {}", contentSize);
             checkConnection.disconnect();
 
             // if entire file size is smaller than buffer_size, then download it in one thread
@@ -323,6 +321,7 @@ public class DownloadManagerImpl implements DownloadManager {
             outputFilesMap.put(outChannel, blocksCount);
 
             createDownloadTasks(address, blocksCount, blockSize, supportPartialContent, outChannel);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
