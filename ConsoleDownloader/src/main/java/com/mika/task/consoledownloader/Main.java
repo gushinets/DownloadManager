@@ -42,8 +42,6 @@ public class Main {
      * @param args input parameters for program
      */
     public static void main(String[] args) {
-        LOGGER.setLevel(Level.INFO);
-
         String nThreads = "n";
         String sLim = "l";
         String oFol = "o";

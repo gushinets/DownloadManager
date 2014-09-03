@@ -111,8 +111,6 @@ public class DownloadManagerImpl implements DownloadManager {
      * @param links Full path to file containing download links.
      */
     public DownloadManagerImpl(int nThreads, long speedLimit, String outFolder, String links) {
-        LOGGER.setLevel(Level.INFO);
-
         Assert.isTrue(nThreads > 0, "Thread number must be positive value");
         Assert.isTrue(speedLimit >= 0, "Download speed limit must be positive value");
         Assert.notNull(outFolder, "Output folder must be not null");

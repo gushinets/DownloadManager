@@ -15,9 +15,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.mbocorp.tests.listeners.TimeMeasuringTestExecutionListener" level="DEBUG"/>
-
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="fileAppender"/>
         <appender-ref ref="consoleAppender"/>
     </root>
