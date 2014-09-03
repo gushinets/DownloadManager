@@ -1,10 +1,12 @@
 package com.mika.task.consoledownloader.impl;
 
+import ch.qos.logback.classic.Level;
 import com.mika.task.consoledownloader.*;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 import org.springframework.util.StopWatch;
 
@@ -19,7 +21,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,31 +28,96 @@ import java.util.concurrent.TimeUnit;
 
 
 /**
- * Implementation of DownloadManager handles all  downloads and delegates download tasks to Downloader threads.
+ * Implementation of DownloadManager interface.
+ *
+ * @author Mikhail Gushinets
+ * @since 01/09/2014
  */
 public class DownloadManagerImpl implements DownloadManager {
 
+    /**
+     * Number of downloading threads.
+     */
     private final int threadsCount;
+
+    /**
+     * Download speed limit.
+     */
     private final long downloadSpeed;
+
+    /**
+     * Folder to download files to.
+     */
     private final String outputFolder;
+
+    /**
+     * Full path to file containing download links.
+     */
     private final String downloadList;
+
+    /**
+     * Bytes totally downloaded.
+     */
     private long totalBytesDownloaded;
 
-    private final ExecutorService executorService;                    // thread pool to handle download tasks
+    /**
+     * Thread pool to handle download tasks.
+     */
+    private final ExecutorService executorService;
 
+    /**
+     * Map that stores output channel and number of threads currently
+     * writing into this channel. Required to decide when to close channel.
+     */
     private final Map<SeekableByteChannel, Integer> outputFilesMap;
-    private final Map<String, String> resourcesMap;                   // stores already downloaded resources and names
-    private final Map<String, Set<String>> copyResourcesMap;          // stores <URL, <List of destination files>>
 
+    /**
+     * Map that stores already downloaded resources and names.
+     */
+    private final Map<String, String> resourcesMap;
+
+    /**
+     * Map that stores URLs and Set of paths to destination files.
+     */
+    private final Map<String, Set<String>> copyResourcesMap;
+
+    /**
+     * Object that implements TokenBucket interface.
+     */
     private TokenBucket tokenBucket;
 
-    private static final int DOWNLOAD_BUFFER_SIZE = 4096;       // buffer size in bytes
-    private static final int TIME_TO_WAIT_TERMINATION = 10;     // time to wait for termination of executorService
+    /**
+     * Default buffer size in bytes.
+     */
+    private static final int DOWNLOAD_BUFFER_SIZE = 4096;
+
+    /**
+     * Time to wait for termination of executorService.
+     */
+    private static final int TIME_TO_WAIT_TERMINATION = 10;
+
+    /**
+     * String to create range GET-request.
+     */
     private static final String RANGE_BYTES_STRING = "bytes=";
 
+    /**
+     * Logger to log messages.
+     */
+    private static final ch.qos.logback.classic.Logger LOGGER =
+            (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(DownloadManagerImpl.class);
 
-    public DownloadManagerImpl( int nThreads, long speedLimit, String outFolder, String links)
-    {
+    /**
+     * Constructor.
+     *
+     * @param nThreads Number of downloading threads.
+     * @param speedLimit Download speed limit.
+     * @param outFolder Folder to download files to.
+     * @param links Full path to file containing download links.
+     */
+    public DownloadManagerImpl(int nThreads, long speedLimit, String outFolder, String links) {
+        LOGGER.setLevel(Level.INFO);
+
         Assert.isTrue(nThreads > 0, "Thread number must be positive value");
         Assert.isTrue(speedLimit >= 0, "Download speed limit must be positive value");
         Assert.notNull(outFolder, "Output folder must be not null");
@@ -73,6 +139,9 @@ public class DownloadManagerImpl implements DownloadManager {
         }
     }
 
+    /**
+     * Starts download process.
+     */
     public final void startDownload() {
         StopWatch watcher = new StopWatch();
         watcher.start();
@@ -86,33 +155,30 @@ public class DownloadManagerImpl implements DownloadManager {
         BufferedReader br = null;
         String sCurrentLine;
         try {
-            br = new BufferedReader( new FileReader( downloadList ) );
-            while ((sCurrentLine = br.readLine()) != null)
-            {
+            br = new BufferedReader(new FileReader(downloadList));
+            while ((sCurrentLine = br.readLine()) != null) {
                 String [] list = sCurrentLine.split(" ");
-                if( list.length < 2 ){
-                    System.err.println("Too few tokens in line: " + sCurrentLine );
+                if (list.length < 2) {
+                    LOGGER.error("Too few tokens in line: " + sCurrentLine);
                     continue;
                 }
                 String address = list[0];
                 String fileToSave = list[1];
 
-                if( !resourceRequiresDownloading( address, fileToSave) ) {
+                if (!resourceRequiresDownloading(address, fileToSave)) {
                     continue;
                 }
 
-                downloadResourceToFile( address, fileToSave );
+                downloadResourceToFile(address, fileToSave);
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
-        }
-        finally {
+        } finally {
             try {
-                if (br != null)
+                if (br != null) {
                     br.close();
-            }
-            catch (IOException ex) {
+                }
+            } catch (IOException ex) {
                 ex.printStackTrace();
             }
         }
@@ -122,14 +188,14 @@ public class DownloadManagerImpl implements DownloadManager {
         // wait for all downloads to complete
         try {
             boolean terminated;
-            do{
+            do {
                 terminated = executorService.awaitTermination(TIME_TO_WAIT_TERMINATION, TimeUnit.MINUTES);
-            } while( !terminated );
-        }catch ( InterruptedException e ) {
+            } while(!terminated);
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        if( t != null ) {
+        if (t != null) {
             tokenBucket.shutdown();
             try {
                 t.join();
@@ -141,18 +207,20 @@ public class DownloadManagerImpl implements DownloadManager {
         copyDuplicateLinks();
 
         watcher.stop();
+        int millisecondsInSecond = 1000;
+        int minutesInHour = 60;
         long totalTime = watcher.getTotalTimeMillis();
-        int minutes = (int)(totalTime/60000);
-        int seconds = (int)(totalTime/1000) - 60*minutes;
+        int minutes = (int) (totalTime / (minutesInHour * millisecondsInSecond));
+        int seconds = (int) (totalTime / millisecondsInSecond) - minutesInHour * minutes;
 
-        System.out.println("==================");
-        System.out.println("Download complete");
-        System.out.println("Work time: " + minutes + ":" + seconds + " (min:sec)");
-        System.out.println("Totally downloaded: " + totalBytesDownloaded + " bytes");
-        System.out.println("Average download speed: " + totalBytesDownloaded/(totalTime/1000) + " bytes/sec");
+        LOGGER.info("==================");
+        LOGGER.info("Download complete");
+        LOGGER.info("Work time: " + minutes + ":" + seconds + " (min:sec)");
+        LOGGER.info("Totally downloaded: " + totalBytesDownloaded + " bytes");
+        LOGGER.info("Average download speed: " + totalBytesDownloaded / (totalTime / millisecondsInSecond) + " bytes/sec");
     }
 
-    private void createDownloadTasks( String address, int blocksCount, long blockSize, boolean supportPartialContent, FileChannel outChannel ) {
+    private void createDownloadTasks(String address, int blocksCount, long blockSize, boolean supportPartialContent, FileChannel outChannel) {
         long currentBlockStart = 0;
         long blockEnd = 0;
 
@@ -164,21 +232,23 @@ public class DownloadManagerImpl implements DownloadManager {
 
                 if (supportPartialContent) {
                     blockEnd = currentBlockStart + blockSize - 1;
-                    if (k == blocksCount - 1)
+                    if (k == blocksCount - 1) {
                         downloadConnection.setRequestProperty(HttpHeaders.RANGE, RANGE_BYTES_STRING + currentBlockStart + "-");
-                    else
+                    } else {
                         downloadConnection.setRequestProperty(HttpHeaders.RANGE, RANGE_BYTES_STRING + currentBlockStart + "-" + blockEnd);
+                    }
                 }
 
                 downloadConnection.connect();
 
+                // responses inside range 2XX (success) are ok for us
                 if (downloadConnection.getResponseCode() / 100 != 2) {
-                    System.err.println("Unsuccessful response code:" + downloadConnection.getResponseCode());
+                    LOGGER.error("Unsuccessful response code:" + downloadConnection.getResponseCode());
                     continue;
                 }
                 int contentLength = downloadConnection.getContentLength();
                 if (contentLength < 1) {
-                    System.err.println("Can not get content");
+                    LOGGER.error("Can not get content");
                     continue;
                 }
 
@@ -200,14 +270,13 @@ public class DownloadManagerImpl implements DownloadManager {
                     currentBlockStart = blockEnd + 1;
                 }
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
 
-    private void downloadResourceToFile( String address, String fileToSave ) {
+    private void downloadResourceToFile(String address, String fileToSave) {
         try {
             // check if web server supports partial download
             URL website = new URL(address);
@@ -218,31 +287,32 @@ public class DownloadManagerImpl implements DownloadManager {
             boolean supportPartialContent = (checkConnection.getResponseCode() == HttpStatus.SC_PARTIAL_CONTENT);
             long contentSize = checkConnection.getContentLengthLong();
 
-            System.out.println("Website: " + address);
-            //System.out.println("Response Code: " + checkConnection.getResponseCode());
-            System.out.println("Partial content retrieval support = " + (supportPartialContent ? "Yes" : "No"));
-            System.out.println("Content-Length: " + contentSize);
+            LOGGER.info(address + " -> " + fileToSave);
+            LOGGER.debug("Response Code: " + checkConnection.getResponseCode());
+            LOGGER.debug("Partial content retrieval support: " + supportPartialContent);
+            LOGGER.debug("Content-Length: " + contentSize);
             checkConnection.disconnect();
 
             // if entire file size is smaller than buffer_size, then download it in one thread
-            if( contentSize <= DOWNLOAD_BUFFER_SIZE ) {
+            if (contentSize <= DOWNLOAD_BUFFER_SIZE) {
                 supportPartialContent = false;
             }
 
             int blocksCount = 1;    // if partial content is not supported
             long blockSize = 0;
 
-            if( supportPartialContent ) {
+            if (supportPartialContent) {
                 blocksCount = threadsCount;
                 blockSize = (int) contentSize / blocksCount + 1;
 
                 if (blockSize < DOWNLOAD_BUFFER_SIZE) {
                     blockSize = DOWNLOAD_BUFFER_SIZE;
 
-                    if (contentSize % blockSize > 0)
+                    if (contentSize % blockSize > 0) {
                         blocksCount = (int) (contentSize / blockSize) + 1;
-                    else
+                    } else {
                         blocksCount = (int) (contentSize / blockSize);
+                    }
                 }
             }
 
@@ -250,32 +320,29 @@ public class DownloadManagerImpl implements DownloadManager {
             FileChannel outChannel = aFile.getChannel();
 
             // save FileChannel to close it after all downloads complete
-            outputFilesMap.put( outChannel, blocksCount );
+            outputFilesMap.put(outChannel, blocksCount);
 
-            createDownloadTasks( address, blocksCount, blockSize, supportPartialContent, outChannel );
-        }
-        catch (IOException e) {
+            createDownloadTasks(address, blocksCount, blockSize, supportPartialContent, outChannel);
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private boolean resourceRequiresDownloading( String address, String fileToSave ) {
+    private boolean resourceRequiresDownloading(String address, String fileToSave) {
         boolean requiresDownload;
-        if( !resourcesMap.containsKey(address) ) {
+        if (!resourcesMap.containsKey(address)) {
             resourcesMap.put(address, fileToSave);
             requiresDownload = true;
-        }
-        else {
+        } else {
             String src = outputFolder + File.separator + resourcesMap.get(address);
             String dest = outputFolder + File.separator + fileToSave;
 
-            if( !copyResourcesMap.containsKey( src ) ) {
+            if (!copyResourcesMap.containsKey(src)) {
                 Set<String> destsList = new HashSet<String>();
-                destsList.add( dest );
-                copyResourcesMap.put( src, destsList );
-            }
-            else {
-                copyResourcesMap.get( src ).add( dest );
+                destsList.add(dest);
+                copyResourcesMap.put(src, destsList);
+            } else {
+                copyResourcesMap.get(src).add(dest);
             }
 
             requiresDownload = false;
@@ -287,8 +354,8 @@ public class DownloadManagerImpl implements DownloadManager {
     private void copyDuplicateLinks() {
         Iterator<Map.Entry<String, Set<String>>> it = copyResourcesMap.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry<String, Set<String>> pairs = (Map.Entry<String, Set<String>>)it.next();
-            //System.out.println(pairs.getKey() + " = " + pairs.getValue());
+            Map.Entry<String, Set<String>> pairs = (Map.Entry<String, Set<String>>) it.next();
+
             String src = pairs.getKey();
             Set<String> destsList = pairs.getValue();
 
@@ -305,13 +372,18 @@ public class DownloadManagerImpl implements DownloadManager {
         }
     }
 
-    // register that partial download is completed and close channel if necessary
-    synchronized public void downloadComplete( SeekableByteChannel channel, long bytesDownloaded )
+    /**
+     * Register that partial download is completed and close channel if necessary.
+     *
+     * @param channel Channel to inspect for closing.
+     * @param bytesDownloaded Bytes downloaded and written to channel.
+     */
+    synchronized public void downloadComplete(SeekableByteChannel channel, long bytesDownloaded)
     {
-        Assert.notNull( channel, "Channel reference must be not null" );
-        Assert.isTrue( bytesDownloaded >= 0, "Bytes downloaded can not be negative");
+        Assert.notNull(channel, "Channel reference must be not null");
+        Assert.isTrue(bytesDownloaded >= 0, "Bytes downloaded can not be negative");
 
-        if( outputFilesMap.containsKey( channel ) ) {
+        if (outputFilesMap.containsKey(channel)) {
             Integer curVal = outputFilesMap.get(channel);
             curVal--;
             if (curVal == 0) {
@@ -323,7 +395,7 @@ public class DownloadManagerImpl implements DownloadManager {
                     e.printStackTrace();
                 }
             } else {
-                outputFilesMap.put( channel, curVal);
+                outputFilesMap.put(channel, curVal);
             }
         }
 

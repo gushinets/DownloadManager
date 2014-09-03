@@ -8,22 +8,58 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 
-
-public class Downloader implements Runnable{
+/**
+ * Downloading thread that handles download task.
+ *
+ * @author Mikhail Gushinets
+ * @since 01/09/2014
+ */
+public class Downloader implements Runnable {
+    /**
+     * Channel to read from.
+     */
     private final ReadableByteChannel rbc;
+
+    /**
+     * Channel to write to.
+     */
     private final FileChannel outChannel;
+
+    /**
+     * Offset in output file to start writing from.
+     */
     private final long position;
+
+    /**
+     * Buffer size to read into.
+     */
     private final int bufferSize;
+
+    /**
+     * Bytes totally read by this thread.
+     */
     private long totalBytesRead;
 
+    /**
+     * Method to call after download is finished.
+     */
     private final ActionCallback actionCallback;
 
 
-    public Downloader(ReadableByteChannel readChannel, FileChannel writeChannel, long offset, int bufSize, ActionCallback actCallback){
-        Assert.notNull( readChannel, "Channel to read from must be not null");
-        Assert.notNull( writeChannel, "Channel to write to must be not null");
+    /**
+     * Constructor for downloading thread.
+     *
+     * @param readChannel Channel to read from.
+     * @param writeChannel Channel to write to.
+     * @param offset Offset in output file to start writing from.
+     * @param bufSize Buffer size in bytes to read into.
+     * @param actCallback Method to call after download is finished.
+     */
+    public Downloader(ReadableByteChannel readChannel, FileChannel writeChannel, long offset, int bufSize, ActionCallback actCallback) {
+        Assert.notNull(readChannel, "Channel to read from must be not null");
+        Assert.notNull(writeChannel, "Channel to write to must be not null");
         Assert.isTrue(offset >= 0, "Offset must be non-negative value");
-        Assert.isTrue( bufSize > 0, "Read buffer size must be positive value");
+        Assert.isTrue(bufSize > 0, "Read buffer size must be positive value");
 
         rbc = readChannel;
         outChannel = writeChannel;
@@ -35,24 +71,21 @@ public class Downloader implements Runnable{
     }
 
     @Override
-    public void run()
-    {
-        // TODO: implement bytes transfer without ByteBuffer (using transferFrom() method) and compare speed
-        try
-        {
-            ByteBuffer buf = ByteBuffer.allocate( bufferSize );
+    public void run() {
+        try {
+            ByteBuffer buf = ByteBuffer.allocate(bufferSize);
             int bytesRead = rbc.read(buf);
             long curPos = position;
-            while (bytesRead != -1)
-            {
+            while (bytesRead != -1) {
                 totalBytesRead += bytesRead;
 
                 buf.flip();  //make buffer ready for read
 
-                while(buf.hasRemaining()){
-                    int bytesWritten = outChannel.write( buf, curPos );
-                    if( bytesWritten > 0)
+                while (buf.hasRemaining()) {
+                    int bytesWritten = outChannel.write(buf, curPos);
+                    if (bytesWritten > 0) {
                         curPos += bytesWritten;
+                    }
                 }
 
                 buf.clear(); //make buffer ready for writing
@@ -60,13 +93,11 @@ public class Downloader implements Runnable{
             }
 
             rbc.close();
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
-        if( actionCallback != null ) {
+        if (actionCallback != null) {
             actionCallback.perform(outChannel, totalBytesRead);
         }
     }

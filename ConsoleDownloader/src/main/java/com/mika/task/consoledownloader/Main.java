@@ -3,16 +3,47 @@ package com.mika.task.consoledownloader;
 import com.mika.task.consoledownloader.impl.DownloadManagerImpl;
 import org.apache.commons.cli.*;
 
+import ch.qos.logback.classic.Level;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 
+/**
+ * Main class of console downloader.
+ *
+ * @author Mikhail Gushinets
+ * @since 01/09/2014
+ */
 public class Main {
+    /**
+     * Default number of downloading threads.
+     */
     private static final int DEFAULT_THREADS_COUNT = 5;
-    private static final long DEFAULT_SPEED_LIMIT = 0;              // limitless
+
+    /**
+     * Default value for download speed limit.
+     * 0 means limitless.
+     */
+    private static final long DEFAULT_SPEED_LIMIT = 0;
+
+    /**
+     * Default name for file with links.
+     */
     private static final String DEFAULT_LINKS_FILE = "links.txt";
 
-    public static void main(String args[]) throws Exception {
+    /**
+     * Logger to log messages.
+     */
+    private static final ch.qos.logback.classic.Logger LOGGER =
+            (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Main.class);
 
-        // TODO: add logback usage for debug info output
+    /**
+     * Main method of main class.
+     * @param args input parameters for program
+     */
+    public static void main(String[] args) {
+        LOGGER.setLevel(Level.INFO);
+
         String nThreads = "n";
         String sLim = "l";
         String oFol = "o";
@@ -40,7 +71,7 @@ public class Main {
                 threadsCount = Integer.valueOf(cmd.getOptionValue(nThreads));
 
                 if (threadsCount <= 0) {
-                    System.err.println("Threads count should be positive value");
+                    LOGGER.error("Threads count should be positive value");
                     System.exit(1);
                 }
             }
@@ -60,7 +91,7 @@ public class Main {
                         break;
                     default:
                         if (!Character.isDigit(suffix)) {
-                            System.err.println("Incorrect suffix for speed limit specified");
+                            LOGGER.error("Incorrect suffix for speed limit specified");
                             System.exit(1);
                         }
                         break;
@@ -69,7 +100,7 @@ public class Main {
                 String speedVal = val.substring(0, k);
                 downloadSpeed = Long.valueOf(speedVal) * multiplier;
                 if (downloadSpeed < 0) {
-                    System.err.println("Download speed should not be negative");
+                    LOGGER.error("Download speed should not be negative");
                     System.exit(1);
                 }
             }
@@ -79,7 +110,7 @@ public class Main {
 
                 File f = new File(outputFolder);
                 if (!f.exists() || !f.isDirectory()) {
-                    System.err.println("Incorrect output folder specified");
+                    LOGGER.error("Incorrect output folder specified");
                     System.exit(1);
                 }
             }
@@ -89,12 +120,12 @@ public class Main {
 
                 File f = new File(downloadList);
                 if (!f.exists() || !f.isFile()) {
-                    System.err.println("Incorrect links file specified");
+                    LOGGER.error("Incorrect links file specified");
                     System.exit(1);
                 }
             }
         } catch (ParseException exp) {
-            System.err.println("Parsing failed.  Reason: " + exp.getMessage());
+            LOGGER.error("Parsing failed.  Reason: " + exp.getMessage());
             System.exit(1);
         }
 
