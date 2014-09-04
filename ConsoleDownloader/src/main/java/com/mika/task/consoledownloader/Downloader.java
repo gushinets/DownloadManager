@@ -1,6 +1,7 @@
 package com.mika.task.consoledownloader;
 
 
+import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
@@ -44,6 +45,12 @@ public class Downloader implements Runnable {
      * Method to call after download is finished.
      */
     private final ActionCallback actionCallback;
+
+    /**
+     * Logger to log messages.
+     */
+    private static final ch.qos.logback.classic.Logger LOGGER =
+            (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Downloader.class);
 
 
     /**
@@ -90,6 +97,9 @@ public class Downloader implements Runnable {
 
                 buf.clear(); //make buffer ready for writing
                 bytesRead = rbc.read(buf);
+                if (bytesRead == -1) {
+                    LOGGER.debug("Bytes read {}", bytesRead);
+                }
             }
 
             rbc.close();
@@ -98,6 +108,7 @@ public class Downloader implements Runnable {
         }
 
         if (actionCallback != null) {
+            LOGGER.debug("I am going to finish my task");
             actionCallback.perform(outChannel, totalBytesRead);
         }
     }

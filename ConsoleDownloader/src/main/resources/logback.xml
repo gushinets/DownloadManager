@@ -3,7 +3,7 @@
 
     <appender name="fileAppender" class="ch.qos.logback.core.FileAppender">
         <encoder>
-            <pattern>%d [%t] %-5p %logger{20}%n %m%n</pattern>
+            <pattern>%d [%t] %-5p %logger{20} %m%n</pattern>
         </encoder>
         <file>test.log</file>
         <append>false</append>
@@ -11,7 +11,7 @@
 
     <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d [%t] %-5p %logger{20}%n %m%n</pattern>
+            <pattern>%d [%t] %-5p %logger{20} %m%n</pattern>
         </encoder>
     </appender>
 

@@ -1,6 +1,5 @@
 package com.mika.task.consoledownloader.impl;
 
-import ch.qos.logback.classic.Level;
 import com.mika.task.consoledownloader.*;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
@@ -82,6 +81,16 @@ public class DownloadManagerImpl implements DownloadManager {
     private TokenBucket tokenBucket;
 
     /**
+     * Number of threads currently not working.
+     */
+    private int currentThreadsAvailable;
+
+    /**
+     * Executor service for download tasks.
+     */
+    private ExecutorService executorService;
+
+    /**
      * Default buffer size in bytes.
      */
     private static final int DOWNLOAD_BUFFER_SIZE = 4096;
@@ -121,6 +130,7 @@ public class DownloadManagerImpl implements DownloadManager {
         outputFolder = outFolder;
         downloadList = links;
         totalBytesDownloaded = 0;
+        currentThreadsAvailable = threadsCount;
 
         outputFilesMap = new HashMap<SeekableByteChannel, Integer>(1);
         resourcesMap = new HashMap<String, String>(1);
@@ -143,6 +153,8 @@ public class DownloadManagerImpl implements DownloadManager {
             t = new Thread(tokenBucket);
             t.start();
         }
+
+        executorService = Executors.newFixedThreadPool(threadsCount);
 
         BufferedReader br = null;
         String sCurrentLine;
@@ -175,8 +187,11 @@ public class DownloadManagerImpl implements DownloadManager {
             }
         }
 
+        completeAllDownloads(executorService);
+
         if (t != null) {
             tokenBucket.shutdown();
+            LOGGER.debug("TokenBucket shutdown");
             try {
                 t.join();
             } catch (InterruptedException e) {
@@ -200,23 +215,22 @@ public class DownloadManagerImpl implements DownloadManager {
         LOGGER.info("Average download speed: {} bytes/sec", totalBytesDownloaded / (totalTime / millisecondsInSecond));
     }
 
-    private void completeAllDownloads(ExecutorService executorService) {
-        executorService.shutdown();
+    private void completeAllDownloads(ExecutorService execService) {
+        execService.shutdown();
         try {
             boolean terminated;
             do {
-                terminated = executorService.awaitTermination(TIME_TO_WAIT_TERMINATION, TimeUnit.MINUTES);
+                terminated = execService.awaitTermination(TIME_TO_WAIT_TERMINATION, TimeUnit.MINUTES);
             } while(!terminated);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        LOGGER.debug("All download tasks completed");
     }
 
     private void createDownloadTasks(String address, int blocksCount, long blockSize, boolean supportPartialContent, FileChannel outChannel) {
         long currentBlockStart = 0;
         long blockEnd = 0;
-
-        ExecutorService executorService = Executors.newFixedThreadPool(threadsCount);
 
         try {
             for (int k = 0; k < blocksCount; k++) {
@@ -250,15 +264,29 @@ public class DownloadManagerImpl implements DownloadManager {
                 ReadableByteChannel rbc = Channels.newChannel(is);
                 ReadableByteChannel readChannel = (downloadSpeed > 0) ? new LimitedByteChannel(rbc, tokenBucket) : rbc;
 
-                // create download task
-                executorService.execute(new Downloader(readChannel, outChannel, currentBlockStart, DOWNLOAD_BUFFER_SIZE,
-                        new ActionCallback() {
-                            public void perform(FileChannel out, long bytesDownloaded) {
-                                downloadComplete(out, bytesDownloaded);
-                            }
 
+
+                synchronized (this) {
+                    currentThreadsAvailable--;
+                    LOGGER.debug("Create task. Current threads available = {}", currentThreadsAvailable);
+
+                    // create download task
+                    executorService.execute(new Downloader(readChannel, outChannel, currentBlockStart, DOWNLOAD_BUFFER_SIZE,
+                            new ActionCallback() {
+                                public void perform(FileChannel out, long bytesDownloaded) {
+                                    downloadComplete(out, bytesDownloaded);
+                                }
+                            }
+                    ));
+
+                    if (currentThreadsAvailable == 0) {
+                        try {
+                            this.wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
                         }
-                ));
+                    }
+                }
 
                 if (supportPartialContent) {
                     currentBlockStart = blockEnd + 1;
@@ -267,8 +295,6 @@ public class DownloadManagerImpl implements DownloadManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        completeAllDownloads(executorService);
     }
 
 
@@ -397,6 +423,12 @@ public class DownloadManagerImpl implements DownloadManager {
         }
 
         totalBytesDownloaded += bytesDownloaded;
+
+        synchronized (this) {
+            currentThreadsAvailable++;
+            LOGGER.debug("Finish task. Current threads available = {}", currentThreadsAvailable);
+            this.notifyAll();
+        }
     }
 
 }
