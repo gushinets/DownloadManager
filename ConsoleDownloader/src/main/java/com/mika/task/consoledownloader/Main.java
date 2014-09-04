@@ -2,7 +2,6 @@ package com.mika.task.consoledownloader;
 
 import com.mika.task.consoledownloader.impl.DownloadManagerImpl;
 import org.apache.commons.cli.*;
-
 import org.slf4j.LoggerFactory;
 
 import java.io.File;

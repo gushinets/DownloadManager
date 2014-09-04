@@ -81,6 +81,7 @@ public class Downloader implements Runnable {
     public void run() {
         try {
             ByteBuffer buf = ByteBuffer.allocate(bufferSize);
+            LOGGER.debug("I am starting the download");
             int bytesRead = rbc.read(buf);
             long curPos = position;
             while (bytesRead != -1) {

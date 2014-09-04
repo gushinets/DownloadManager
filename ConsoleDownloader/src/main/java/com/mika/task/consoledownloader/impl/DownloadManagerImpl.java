@@ -190,8 +190,9 @@ public class DownloadManagerImpl implements DownloadManager {
         completeAllDownloads(executorService);
 
         if (t != null) {
+            LOGGER.debug("Trying to shutdown TokenBucket...");
             tokenBucket.shutdown();
-            LOGGER.debug("TokenBucket shutdown");
+            LOGGER.debug("TokenBucket is now switched off");
             try {
                 t.join();
             } catch (InterruptedException e) {
@@ -263,8 +264,6 @@ public class DownloadManagerImpl implements DownloadManager {
                 InputStream is = downloadConnection.getInputStream();
                 ReadableByteChannel rbc = Channels.newChannel(is);
                 ReadableByteChannel readChannel = (downloadSpeed > 0) ? new LimitedByteChannel(rbc, tokenBucket) : rbc;
-
-
 
                 synchronized (this) {
                     currentThreadsAvailable--;
@@ -375,6 +374,7 @@ public class DownloadManagerImpl implements DownloadManager {
     }
 
     private void copyDuplicateLinks() {
+        LOGGER.debug("Coping duplicate files...");
         Iterator<Map.Entry<String, Set<String>>> it = copyResourcesMap.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, Set<String>> pairs = (Map.Entry<String, Set<String>>) it.next();
@@ -386,6 +386,7 @@ public class DownloadManagerImpl implements DownloadManager {
                 Path srcPath = FileSystems.getDefault().getPath(src);
                 Path dstPath = FileSystems.getDefault().getPath(aDestsList);
                 try {
+                    LOGGER.debug("Copy {} to {}", srcPath, dstPath);
                     Files.copy(srcPath, dstPath, StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -393,6 +394,7 @@ public class DownloadManagerImpl implements DownloadManager {
             }
             it.remove();
         }
+        LOGGER.debug("Coping of duplicates completed");
     }
 
     /**
@@ -414,6 +416,7 @@ public class DownloadManagerImpl implements DownloadManager {
 
                 try {
                     channel.close();
+                    LOGGER.debug("Channel closed");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -423,11 +426,12 @@ public class DownloadManagerImpl implements DownloadManager {
         }
 
         totalBytesDownloaded += bytesDownloaded;
+        LOGGER.debug("I have downloaded {} bytes", bytesDownloaded);
 
         synchronized (this) {
             currentThreadsAvailable++;
             LOGGER.debug("Finish task. Current threads available = {}", currentThreadsAvailable);
-            this.notifyAll();
+            this.notify();
         }
     }
 
