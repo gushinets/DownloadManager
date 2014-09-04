@@ -374,7 +374,7 @@ public class DownloadManagerImpl implements DownloadManager {
     }
 
     private void copyDuplicateLinks() {
-        LOGGER.debug("Coping duplicate files...");
+        LOGGER.debug("Copying duplicate files...");
         Iterator<Map.Entry<String, Set<String>>> it = copyResourcesMap.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, Set<String>> pairs = (Map.Entry<String, Set<String>>) it.next();
@@ -394,7 +394,7 @@ public class DownloadManagerImpl implements DownloadManager {
             }
             it.remove();
         }
-        LOGGER.debug("Coping of duplicates completed");
+        LOGGER.debug("Copying of duplicates completed");
     }
 
     /**

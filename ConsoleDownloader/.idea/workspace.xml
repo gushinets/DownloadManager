@@ -1,19 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="b96a3ab7-cc2f-4565-9c9e-2c36ffb87c7d" name="Default" comment="Changed download logics.">
-      <change type="DELETED" beforePath="C:\Work\Java\DownloadManager\ConsoleDownloader\lib\commons-codec-1.6.jar" afterPath="" />
-      <change type="DELETED" beforePath="C:\Work\Java\DownloadManager\ConsoleDownloader\lib\commons-logging-1.1.3.jar" afterPath="" />
-      <change type="DELETED" beforePath="C:\Work\Java\DownloadManager\ConsoleDownloader\lib\httpclient-4.3.1.jar" afterPath="" />
-      <change type="DELETED" beforePath="C:\Work\Java\DownloadManager\ConsoleDownloader\lib\httpcore-4.3.jar" afterPath="" />
-      <change type="DELETED" beforePath="C:\Work\Java\DownloadManager\ConsoleDownloader\lib\spring-core-4.0.6.RELEASE.jar" afterPath="" />
+    <list default="true" id="b96a3ab7-cc2f-4565-9c9e-2c36ffb87c7d" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/com/mika/task/consoledownloader/impl/DownloadManagerImpl.java" afterPath="$PROJECT_DIR$/src/main/java/com/mika/task/consoledownloader/impl/DownloadManagerImpl.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/com/mika/task/consoledownloader/Downloader.java" afterPath="$PROJECT_DIR$/src/main/java/com/mika/task/consoledownloader/Downloader.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/com/mika/task/consoledownloader/Main.java" afterPath="$PROJECT_DIR$/src/main/java/com/mika/task/consoledownloader/Main.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/gradle.xml" afterPath="$PROJECT_DIR$/.idea/gradle.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/logback.xml" afterPath="$PROJECT_DIR$/src/main/resources/logback.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/vcs.xml" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="ConsoleDownloader.iws" />
@@ -37,11 +27,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="logback.xml" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="logback.xml" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/resources/logback.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="374" max-vertical-offset="476">
-              <caret line="22" column="0" selection-start-line="22" selection-start-column="0" selection-end-line="22" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.46092504" vertical-offset="0" max-vertical-offset="627">
+              <caret line="17" column="21" selection-start-line="17" selection-start-column="21" selection-end-line="17" selection-end-column="21" />
               <folding />
             </state>
           </provider>
@@ -57,11 +47,26 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="DownloadManagerImpl.java" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="DownloadManagerImpl.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/com/mika/task/consoledownloader/impl/DownloadManagerImpl.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.53907496" vertical-offset="6377" max-vertical-offset="7157">
-              <caret line="418" column="48" selection-start-line="418" selection-start-column="48" selection-end-line="418" selection-end-column="48" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="6507" max-vertical-offset="7548">
+              <caret line="393" column="13" selection-start-line="393" selection-start-column="13" selection-end-line="393" selection-end-column="13" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="test.log" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test.log">
+          <provider editor-type-id="com.intellij.persistence.database.editor.CsvTableFileEditorProvider">
+            <state />
+          </provider>
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="-0.0" vertical-offset="0" max-vertical-offset="9911">
+              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -426,10 +431,10 @@
         <option value="$PROJECT_DIR$/src/main/java/com/mika/task/consoledownloader/impl/TokenBucketImpl.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/mika/task/consoledownloader/TokenBucket.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/mika/task/consoledownloader/LimitedByteChannel.java" />
-        <option value="$PROJECT_DIR$/src/main/resources/logback.xml" />
         <option value="$PROJECT_DIR$/src/main/java/com/mika/task/consoledownloader/Main.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/mika/task/consoledownloader/Downloader.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/mika/task/consoledownloader/impl/DownloadManagerImpl.java" />
+        <option value="$PROJECT_DIR$/src/main/resources/logback.xml" />
       </list>
     </option>
   </component>
@@ -896,7 +901,7 @@
       <workItem from="1409835321858" duration="7075000" />
       <workItem from="1409848229480" duration="3944000" />
       <workItem from="1409852686968" duration="213000" />
-      <workItem from="1409853778912" duration="2120000" />
+      <workItem from="1409853778912" duration="2578000" />
     </task>
     <task id="LOCAL-00001" summary="Added usage of apache commons CLI">
       <created>1409589691471</created>
@@ -910,11 +915,15 @@
       <created>1409768249139</created>
       <updated>1409768249139</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Added several log messages">
+      <created>1409856502829</created>
+      <updated>1409856502829</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="150383000" />
+    <option name="totallyTimeSpent" value="150841000" />
   </component>
   <component name="TodoView" selected-index="0">
     <todo-panel id="selected-file">
@@ -1019,7 +1028,8 @@
     <MESSAGE value="Fixed warning" />
     <MESSAGE value="Added usage of Logback." />
     <MESSAGE value="Changed download logics." />
-    <option name="LAST_COMMIT_MESSAGE" value="Changed download logics." />
+    <MESSAGE value="Added several log messages" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added several log messages" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1053,7 +1063,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="4947" max-vertical-offset="5763">
           <caret line="310" column="72" selection-start-line="310" selection-start-column="72" selection-end-line="310" selection-end-column="72" />
-          <folding />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1115,7 +1127,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="833" max-vertical-offset="5763">
           <caret line="49" column="62" selection-start-line="49" selection-start-column="62" selection-end-line="49" selection-end-column="62" />
-          <folding />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1177,7 +1191,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="187" max-vertical-offset="5763">
           <caret line="11" column="34" selection-start-line="11" selection-start-column="34" selection-end-line="11" selection-end-column="34" />
-          <folding />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1239,7 +1255,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="68" max-vertical-offset="5287">
           <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
-          <folding />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1255,7 +1273,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="1530" max-vertical-offset="5338">
           <caret line="90" column="28" selection-start-line="90" selection-start-column="28" selection-end-line="90" selection-end-column="28" />
-          <folding />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1271,7 +1291,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="765" max-vertical-offset="5338">
           <caret line="45" column="66" selection-start-line="45" selection-start-column="64" selection-end-line="45" selection-end-column="66" />
-          <folding />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1367,24 +1389,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/resources/logback.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="476">
-          <caret line="22" column="0" selection-start-line="22" selection-start-column="0" selection-end-line="22" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/test.log">
-      <provider editor-type-id="com.intellij.persistence.database.editor.CsvTableFileEditorProvider">
-        <state />
-      </provider>
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="845">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/mika/task/consoledownloader/Main.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="1459" max-vertical-offset="2329">
@@ -1421,8 +1425,29 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/mika/task/consoledownloader/impl/DownloadManagerImpl.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.53907496" vertical-offset="6377" max-vertical-offset="7157">
-          <caret line="418" column="48" selection-start-line="418" selection-start-column="48" selection-end-line="418" selection-end-column="48" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="6507" max-vertical-offset="7548">
+          <caret line="393" column="13" selection-start-line="393" selection-start-column="13" selection-end-line="393" selection-end-column="13" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test.log">
+      <provider editor-type-id="com.intellij.persistence.database.editor.CsvTableFileEditorProvider">
+        <state />
+      </provider>
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-0.0" vertical-offset="0" max-vertical-offset="9911">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/resources/logback.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.46092504" vertical-offset="0" max-vertical-offset="627">
+          <caret line="17" column="21" selection-start-line="17" selection-start-column="21" selection-end-line="17" selection-end-column="21" />
           <folding />
         </state>
       </provider>
