@@ -49,9 +49,13 @@ public class LimitedByteChannel implements ReadableByteChannel {
     synchronized public int read(ByteBuffer dst) throws IOException {
         Assert.notNull(dst, "Buffer to read into can not be null");
 
+        int read = 0;
         long tokensLeft = tokenBucket.getTokensLeft();
+        if (tokensLeft <= 0) {
+            return read;
+        }
+
         int bufferSize = dst.capacity();
-        int read;
 
         if (tokensLeft < bufferSize) {
             ByteBuffer newBuf = ByteBuffer.allocate((int) tokensLeft); // if tokensLeft < bufferSize we can truncate long to int
